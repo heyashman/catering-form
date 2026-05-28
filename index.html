@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catering Order Form</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f4f0;color:#1a1a1a;font-size:15px;padding-bottom:40px}
+
+  .top-bar{background:#1a1a1a;color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+  .top-bar h1{font-size:16px;font-weight:600;letter-spacing:.01em}
+  .top-bar .btns{display:flex;gap:8px}
+  .top-bar button{font-size:12px;padding:6px 12px;border-radius:6px;border:none;cursor:pointer;font-weight:600}
+  .btn-new{background:#ffffff22;color:#fff}
+  .btn-new:hover{background:#ffffff33}
+  .btn-print{background:#f59e0b;color:#1a1a1a}
+  .btn-print:hover{background:#fbbf24}
+  .btn-send{background:#22c55e;color:#fff}
+  .btn-send:hover{background:#16a34a}
+
+  .container{max-width:680px;margin:0 auto;padding:14px 12px}
+
+  .rest-banner{background:#fff;border-radius:12px;border:1px solid #e5e3dd;padding:14px;margin-bottom:12px;display:flex;gap:12px;align-items:center}
+  .rest-icon{width:46px;height:46px;background:#f5f4f0;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  .rest-inputs{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:7px}
+  .rest-inputs .full{grid-column:1/-1}
+
+  .card{background:#fff;border-radius:12px;border:1px solid #e5e3dd;padding:14px;margin-bottom:12px}
+  .card-title{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.07em;margin-bottom:11px;display:flex;align-items:center;gap:5px}
+  .card-title span{font-size:14px}
+
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
+  .row.three{grid-template-columns:1fr 1fr 1fr}
+  .row.full{grid-template-columns:1fr}
+
+  .field{display:flex;flex-direction:column;gap:3px}
+  .field label{font-size:11px;color:#888;font-weight:600;letter-spacing:.03em}
+  .field input,.field select,.field textarea{font-size:14px;padding:9px 11px;border-radius:8px;border:1px solid #e0deda;background:#faf9f7;color:#1a1a1a;width:100%;appearance:none;-webkit-appearance:none}
+  .field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:#f59e0b;background:#fff}
+  .field textarea{resize:vertical;min-height:68px;line-height:1.5}
+  .field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+
+  .status-pending{color:#92400e;background:#fef3c7;border:1px solid #fcd34d}
+  .status-confirmed{color:#065f46;background:#d1fae5;border:1px solid #6ee7b7}
+  .status-cancelled{color:#991b1b;background:#fee2e2;border:1px solid #fca5a5}
+
+  .items-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .items-table{width:100%;border-collapse:collapse;font-size:13px;min-width:480px}
+  .items-table th{font-size:10px;font-weight:700;color:#888;text-align:left;padding:5px 5px 7px;border-bottom:1px solid #f0ede8;text-transform:uppercase;letter-spacing:.04em}
+  .items-table td{padding:5px 3px;vertical-align:middle;border-bottom:1px solid #f8f6f2}
+  .items-table td input{font-size:13px;padding:7px 8px;border-radius:6px;border:1px solid #e0deda;background:#faf9f7;width:100%;color:#1a1a1a}
+  .items-table td input:focus{outline:none;border-color:#f59e0b;background:#fff}
+  .sub-cell{font-size:13px;color:#888;text-align:right;padding-right:4px;white-space:nowrap}
+  .del-btn{background:none;border:none;cursor:pointer;color:#ccc;font-size:18px;padding:3px 6px;border-radius:4px;line-height:1;display:flex;align-items:center;justify-content:center}
+  .del-btn:hover{color:#ef4444;background:#fee2e2}
+  .add-item-btn{margin-top:10px;font-size:13px;color:#f59e0b;background:none;border:1px solid #fcd34d;border-radius:8px;padding:7px 14px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:5px}
+  .add-item-btn:hover{background:#fef3c7}
+
+  .divider{border:none;border-top:1px solid #f0ede8;margin:10px 0}
+  .total-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px}
+  .total-row .lbl{color:#888}
+  .total-row .val{font-weight:600}
+  .grand-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0 4px;border-top:1px solid #e5e3dd;margin-top:4px}
+  .grand-row .lbl{font-size:14px;font-weight:600}
+  .grand-row .val{font-size:20px;font-weight:700;color:#1a1a1a}
+
+  .pay-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+  .pay-card{background:#faf9f7;border-radius:8px;padding:10px 11px;border:1px solid #e5e3dd}
+  .pay-card .pc-label{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+  .pay-card .pc-val{font-size:16px;font-weight:700}
+  .pay-card.total .pc-val{color:#1a1a1a}
+  .pay-card.paid .pc-val{color:#16a34a}
+  .pay-card.due .pc-val{color:#dc2626}
+
+  .pay-table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed;min-width:460px}
+  .pay-table th{font-size:10px;font-weight:700;color:#888;text-align:left;padding:5px 4px 7px;border-bottom:1px solid #f0ede8;text-transform:uppercase;letter-spacing:.04em}
+  .pay-table td{padding:5px 3px;border-bottom:1px solid #f8f6f2;vertical-align:middle}
+  .pay-table td input,.pay-table td select{font-size:12px;padding:6px 7px;border-radius:6px;border:1px solid #e0deda;background:#faf9f7;width:100%;color:#1a1a1a;appearance:none;-webkit-appearance:none}
+  .pay-table td input:focus,.pay-table td select:focus{outline:none;border-color:#f59e0b;background:#fff}
+
+  .action-bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+  .action-bar button{flex:1;min-width:120px;padding:13px;border-radius:10px;border:none;cursor:pointer;font-size:14px;font-weight:700}
+  .a-print{background:#1a1a1a;color:#fff}
+  .a-print:hover{background:#333}
+  .a-whatsapp{background:#22c55e;color:#fff}
+  .a-whatsapp:hover{background:#16a34a}
+  .a-clear{background:#f5f4f0;color:#888;border:1px solid #e0deda!important}
+  .a-clear:hover{background:#e5e3dd}
+
+  .invoice-preview{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:200;padding:16px;overflow-y:auto}
+  .invoice-box{background:#fff;border-radius:14px;max-width:520px;margin:0 auto;padding:24px;position:relative}
+  .inv-close{position:absolute;top:12px;right:14px;background:none;border:none;font-size:22px;cursor:pointer;color:#888;line-height:1}
+  .inv-close:hover{color:#1a1a1a}
+  .inv-header{border-bottom:2px solid #1a1a1a;padding-bottom:14px;margin-bottom:16px}
+  .inv-header h2{font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .inv-header p{font-size:13px;color:#888;margin-top:3px}
+  .inv-section{margin-bottom:14px}
+  .inv-section h3{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-bottom:7px}
+  .inv-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:13px}
+  .inv-grid .k{color:#888}
+  .inv-grid .v{font-weight:500}
+  .inv-items{width:100%;border-collapse:collapse;font-size:13px;margin-top:4px}
+  .inv-items th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888;text-align:left;padding:5px 0;border-bottom:1px solid #e5e3dd}
+  .inv-items td{padding:6px 0;border-bottom:1px solid #f5f4f0;vertical-align:top}
+  .inv-total{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;color:#888}
+  .inv-grand{display:flex;justify-content:space-between;font-size:16px;font-weight:700;padding:10px 0 0;border-top:2px solid #1a1a1a;margin-top:6px}
+  .inv-actions{display:flex;gap:8px;margin-top:16px}
+  .inv-actions button{flex:1;padding:11px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:700}
+  .inv-print{background:#1a1a1a;color:#fff}
+  .inv-wa{background:#22c55e;color:#fff}
+
+  @media print{
+    body{background:#fff;padding:0}
+    .top-bar,.action-bar,.del-btn,.add-item-btn,.no-print{display:none!important}
+    .card,.rest-banner{border:1px solid #ccc!important;page-break-inside:avoid;box-shadow:none}
+    .invoice-preview{display:none!important}
+    .field input,.field select,.field textarea,.items-table td input,.pay-table td input,.pay-table td select{border:none;background:transparent;padding:4px 0}
+  }
+</style>
+</head>
+<body>
+
+<div class="top-bar">
+  <h1>🍽 Catering Order</h1>
+  <div class="btns">
+    <button class="btn-new" onclick="newForm()">+ New</button>
+    <button class="btn-send" onclick="showInvoice()">Invoice ↗</button>
+    <button class="btn-print" onclick="window.print()">Print</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="rest-banner">
+    <div class="rest-icon">🏪</div>
+    <div class="rest-inputs">
+      <div class="field full"><label>Restaurant name</label><input id="f-restname" type="text" placeholder="Your restaurant name"></div>
+      <div class="field"><label>Branch</label><input id="f-branch" type="text" placeholder="e.g. Downtown"></div>
+      <div class="field"><label>Manager</label><input id="f-manager" type="text" placeholder="Name"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>📋</span> Order details</div>
+    <div class="row">
+      <div class="field"><label>Order #</label><input id="f-ref" type="text" placeholder="CAT-001"></div>
+      <div class="field"><label>Status</label>
+        <select id="f-status" onchange="updateStatusStyle()">
+          <option>Pending</option><option>Confirmed</option><option>Cancelled</option>
+        </select>
+      </div>
+    </div>
+    <div class="row three">
+      <div class="field"><label>Event date</label><input id="f-date" type="text" placeholder="June 6, 2026"></div>
+      <div class="field"><label>Time</label><input id="f-time" type="text" placeholder="10:00 AM"></div>
+      <div class="field"><label>Guests</label><input id="f-guests" type="number" placeholder="150" inputmode="numeric"></div>
+    </div>
+    <div class="row full">
+      <div class="field"><label>Event type</label><input id="f-event" type="text" placeholder="Wedding, corporate, birthday..."></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>👤</span> Client</div>
+    <div class="row">
+      <div class="field"><label>Client name</label><input id="f-client" type="text" placeholder="Full name"></div>
+      <div class="field"><label>Phone</label><input id="f-phone" type="tel" placeholder="+1 (647)..." inputmode="tel"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Email</label><input id="f-email" type="email" placeholder="client@email.com" inputmode="email"></div>
+      <div class="field"><label>Company</label><input id="f-company" type="text" placeholder="Optional"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>📍</span> Venue & delivery</div>
+    <div class="row full">
+      <div class="field"><label>Delivery address</label><input id="f-venue" type="text" placeholder="Full address"></div>
+    </div>
+    <div class="row">
+      <div class="field"><label>Setup / arrival time</label><input id="f-setup" type="text" placeholder="Before 10:00 AM"></div>
+      <div class="field"><label>Venue contact</label><input id="f-venuecontact" type="text" placeholder="Name & phone"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>🍛</span> Menu / items ordered</div>
+    <div class="items-wrap">
+      <table class="items-table">
+        <thead><tr>
+          <th style="width:35%">Item</th>
+          <th style="width:9%">Qty</th>
+          <th style="width:14%">Unit</th>
+          <th style="width:16%">Price</th>
+          <th style="width:13%">Subtotal</th>
+          <th style="width:8%" class="no-print"></th>
+        </tr></thead>
+        <tbody id="items-body"></tbody>
+      </table>
+    </div>
+    <button class="add-item-btn" onclick="addRow()">＋ Add item</button>
+    <div class="divider"></div>
+    <div class="total-row"><span class="lbl">Subtotal</span><span class="val" id="subtotal">$0.00</span></div>
+    <div class="total-row">
+      <span class="lbl">Tax / service charge</span>
+      <input id="f-tax" type="text" placeholder="$0 or 13%" style="width:90px;text-align:right;font-size:13px;padding:6px 8px;border-radius:6px;border:1px solid #e0deda;background:#faf9f7;color:#1a1a1a;" oninput="calcTotal()">
+    </div>
+    <div class="grand-row">
+      <span class="lbl">Grand total</span>
+      <span class="val" id="grand-total">$0.00</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>💰</span> Deposit & payments</div>
+    <div class="pay-summary">
+      <div class="pay-card total"><div class="pc-label">Grand total</div><div class="pc-val" id="pt-total">$0.00</div></div>
+      <div class="pay-card paid"><div class="pc-label">Paid</div><div class="pc-val" id="pt-paid">$0.00</div></div>
+      <div class="pay-card due"><div class="pc-label">Balance due</div><div class="pc-val" id="pt-due">$0.00</div></div>
+    </div>
+    <div class="items-wrap">
+      <table class="pay-table">
+        <thead><tr>
+          <th style="width:20%">Date</th>
+          <th style="width:20%">Amount</th>
+          <th style="width:22%">Method</th>
+          <th style="width:19%">Type</th>
+          <th style="width:13%">Status</th>
+          <th style="width:6%" class="no-print"></th>
+        </tr></thead>
+        <tbody id="pay-body"></tbody>
+      </table>
+    </div>
+    <button class="add-item-btn" onclick="addPayRow()">＋ Add payment</button>
+    <div class="divider"></div>
+    <div class="row">
+      <div class="field"><label>Deposit required</label><input id="f-depreq" type="text" placeholder="e.g. $500"></div>
+      <div class="field"><label>Deposit due date</label><input id="f-depdue" type="text" placeholder="June 1, 2026"></div>
+    </div>
+    <div class="row full">
+      <div class="field"><label>Payment notes</label><input id="f-paynotes" type="text" placeholder="e.g. Balance due on day of event"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>📝</span> Notes & instructions</div>
+    <div class="row full">
+      <div class="field"><label>Dietary restrictions / allergies</label><textarea id="f-dietary" placeholder="e.g. 10 vegetarian, 3 nut allergy"></textarea></div>
+    </div>
+    <div class="row full">
+      <div class="field"><label>Additional notes</label><textarea id="f-notes" placeholder="Setup instructions, parking, special requests..."></textarea></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span>🗓</span> Booking info</div>
+    <div class="row">
+      <div class="field"><label>Date booked</label><input id="f-booked" type="text" placeholder="May 27, 2026"></div>
+      <div class="field"><label>Booked by</label><input id="f-bookedby" type="text" placeholder="Manager name"></div>
+    </div>
+  </div>
+
+  <div class="action-bar">
+    <button class="a-clear" onclick="newForm()">🔄 New order</button>
+    <button class="a-print" onclick="window.print()">🖨 Print / PDF</button>
+    <button class="a-whatsapp" onclick="showInvoice()">📤 Make invoice</button>
+  </div>
+
+</div>
+
+<div class="invoice-preview" id="invoice-preview">
+  <div class="invoice-box">
+    <button class="inv-close" onclick="closeInvoice()">✕</button>
+    <div class="inv-header">
+      <h2 id="inv-restname">Restaurant Name</h2>
+      <p id="inv-branch"></p>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px">
+      <div>
+        <div style="font-size:11px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Invoice for</div>
+        <div style="font-size:16px;font-weight:700" id="inv-client"></div>
+        <div style="font-size:13px;color:#888" id="inv-phone"></div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:#888;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px">Order</div>
+        <div style="font-size:14px;font-weight:600" id="inv-ref"></div>
+        <div style="font-size:13px;color:#888" id="inv-date"></div>
+      </div>
+    </div>
+    <div class="inv-section">
+      <h3>Event details</h3>
+      <div class="inv-grid" id="inv-details"></div>
+    </div>
+    <div class="inv-section">
+      <h3>Items ordered</h3>
+      <table class="inv-items"><thead><tr>
+        <th style="width:50%">Item</th><th style="width:12%">Qty</th><th style="width:15%">Unit</th><th style="width:23%;text-align:right">Price</th>
+      </tr></thead><tbody id="inv-items"></tbody></table>
+      <div class="inv-total" style="margin-top:8px"><span>Subtotal</span><span id="inv-sub"></span></div>
+      <div class="inv-total" id="inv-tax-row" style="display:none"><span>Tax / service</span><span id="inv-tax-val"></span></div>
+      <div class="inv-grand"><span>Total</span><span id="inv-grand"></span></div>
+    </div>
+    <div class="inv-section" id="inv-pay-section">
+      <h3>Payment summary</h3>
+      <div class="inv-grid" id="inv-pay-info"></div>
+    </div>
+    <div id="inv-notes-section" style="display:none">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#888;margin-bottom:5px">Notes</div>
+      <div style="font-size:13px;color:#555;line-height:1.5" id="inv-notes"></div>
+    </div>
+    <div class="inv-actions">
+      <button class="inv-print" onclick="printInvoice()">🖨 Print invoice</button>
+      <button class="inv-wa" onclick="sendWhatsApp()">📲 Send via WhatsApp</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let rowId=0, payId=0;
+
+function v(id){return (document.getElementById(id)||{}).value||'';}
+
+function addRow(name='',qty='',unit='',price=''){
+  const id=rowId++;
+  const tr=document.createElement('tr');
+  tr.id='row-'+id;
+  tr.innerHTML=
+    '<td><input type="text" placeholder="Item name" value="'+esc(name)+'" oninput="calcTotal()"></td>'+
+    '<td><input type="number" placeholder="1" value="'+esc(qty)+'" style="text-align:center" inputmode="numeric" oninput="calcTotal()"></td>'+
+    '<td><input type="text" placeholder="pax" value="'+esc(unit)+'"></td>'+
+    '<td><input type="text" placeholder="$0" value="'+esc(price)+'" inputmode="decimal" oninput="calcTotal()"></td>'+
+    '<td class="sub-cell" id="rs-'+id+'">—</td>'+
+    '<td class="no-print"><button class="del-btn" onclick="delRow('+id+')" aria-label="Remove">×</button></td>';
+  document.getElementById('items-body').appendChild(tr);
+  calcTotal();
+}
+
+function delRow(id){const e=document.getElementById('row-'+id);if(e)e.remove();calcTotal();}
+
+function addPayRow(date='',amount='',method='Cash',type='Deposit',status='Pending'){
+  const id=payId++;
+  const tr=document.createElement('tr');
+  tr.id='pay-'+id;
+  const mo=['Cash','Card','E-transfer','Cheque','Online'].map(m=>'<option'+(m===method?' selected':'')+'>'+m+'</option>').join('');
+  const to=['Deposit','Partial','Final'].map(t=>'<option'+(t===type?' selected':'')+'>'+t+'</option>').join('');
+  const so=['Pending','Received','Refunded'].map(s=>'<option'+(s===status?' selected':'')+'>'+s+'</option>').join('');
+  tr.innerHTML=
+    '<td><input type="text" placeholder="Date" value="'+esc(date)+'" oninput="calcPayments()"></td>'+
+    '<td><input type="text" placeholder="$0" value="'+esc(amount)+'" inputmode="decimal" oninput="calcPayments()"></td>'+
+    '<td><select onchange="calcPayments()">'+mo+'</select></td>'+
+    '<td><select onchange="calcPayments()">'+to+'</select></td>'+
+    '<td><select onchange="calcPayments()">'+so+'</select></td>'+
+    '<td class="no-print"><button class="del-btn" onclick="delPayRow('+id+')" aria-label="Remove">×</button></td>';
+  document.getElementById('pay-body').appendChild(tr);
+  calcPayments();
+}
+
+function delPayRow(id){const e=document.getElementById('pay-'+id);if(e)e.remove();calcPayments();}
+
+function esc(s){return String(s).replace(/"/g,'&quot;');}
+
+function parseAmt(s){if(!s)return 0;const n=parseFloat(String(s).replace(/[^0-9.]/g,''));return isNaN(n)?0:n;}
+
+function fmt(n){return '$'+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+
+function calcTotal(){
+  let sub=0;
+  document.querySelectorAll('#items-body tr').forEach(tr=>{
+    const qty=parseFloat(tr.cells[1]?.querySelector('input')?.value)||0;
+    const price=parseAmt(tr.cells[3]?.querySelector('input')?.value);
+    const s=qty*price; sub+=s;
+    const c=document.getElementById('rs-'+tr.id.replace('row-',''));
+    if(c)c.textContent=s>0?fmt(s):'—';
+  });
+  document.getElementById('subtotal').textContent=fmt(sub);
+  const taxStr=v('f-tax');
+  let tax=taxStr.includes('%')?sub*(parseFloat(taxStr)/100):parseAmt(taxStr);
+  const grand=sub+tax;
+  document.getElementById('grand-total').textContent=fmt(grand);
+  document.getElementById('pt-total').textContent=fmt(grand);
+  calcPayments();
+}
+
+function calcPayments(){
+  const grand=parseAmt(document.getElementById('grand-total').textContent);
+  let paid=0;
+  document.querySelectorAll('#pay-body tr').forEach(tr=>{
+    const amt=parseAmt(tr.cells[1]?.querySelector('input')?.value);
+    const status=tr.cells[4]?.querySelector('select')?.value;
+    if(status==='Received')paid+=amt;
+    if(status==='Refunded')paid-=amt;
+  });
+  paid=Math.max(0,paid);
+  document.getElementById('pt-paid').textContent=fmt(paid);
+  document.getElementById('pt-due').textContent=fmt(Math.max(0,grand-paid));
+}
+
+function updateStatusStyle(){
+  const sel=document.getElementById('f-status');
+  sel.className='status-'+sel.value.toLowerCase();
+}
+
+function newForm(){
+  if(!confirm('Start a new blank order? Current data will be cleared.'))return;
+  ['f-restname','f-branch','f-manager','f-ref','f-date','f-time','f-guests','f-event',
+   'f-client','f-phone','f-email','f-company','f-venue','f-setup','f-venuecontact',
+   'f-dietary','f-notes','f-booked','f-bookedby','f-tax','f-depreq','f-depdue','f-paynotes']
+    .forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('f-status').value='Pending';
+  updateStatusStyle();
+  document.getElementById('items-body').innerHTML='';
+  document.getElementById('pay-body').innerHTML='';
+  rowId=0;payId=0;
+  addRow();calcTotal();
+}
+
+function showInvoice(){
+  const rn=v('f-restname')||'Restaurant';
+  document.getElementById('inv-restname').textContent=rn;
+  const br=[v('f-branch'),v('f-manager')].filter(Boolean).join(' · ');
+  document.getElementById('inv-branch').textContent=br;
+  document.getElementById('inv-client').textContent=v('f-client')||'—';
+  document.getElementById('inv-phone').textContent=v('f-phone');
+  document.getElementById('inv-ref').textContent=v('f-ref')||'—';
+  document.getElementById('inv-date').textContent=v('f-date');
+  const details=[
+    ['Event',v('f-event')],['Date',v('f-date')],['Time',v('f-time')],
+    ['Guests',v('f-guests')],['Venue',v('f-venue')],['Setup time',v('f-setup')]
+  ].filter(d=>d[1]);
+  document.getElementById('inv-details').innerHTML=details.map(d=>'<span class="k">'+d[0]+'</span><span class="v">'+d[1]+'</span>').join('');
+  const rows=[];
+  document.querySelectorAll('#items-body tr').forEach(tr=>{
+    const name=tr.cells[0]?.querySelector('input')?.value;
+    const qty=tr.cells[1]?.querySelector('input')?.value;
+    const unit=tr.cells[2]?.querySelector('input')?.value;
+    const sub=document.getElementById('rs-'+tr.id.replace('row-',''))?.textContent||'';
+    if(name)rows.push('<tr><td>'+name+'</td><td>'+qty+'</td><td>'+unit+'</td><td style="text-align:right">'+sub+'</td></tr>');
+  });
+  document.getElementById('inv-items').innerHTML=rows.join('');
+  document.getElementById('inv-sub').textContent=document.getElementById('subtotal').textContent;
+  const taxStr=v('f-tax');
+  if(taxStr){
+    document.getElementById('inv-tax-row').style.display='flex';
+    document.getElementById('inv-tax-val').textContent=taxStr;
+  }
+  document.getElementById('inv-grand').textContent=document.getElementById('grand-total').textContent;
+  const payInfo=[
+    ['Deposit required',v('f-depreq')],
+    ['Total paid',document.getElementById('pt-paid').textContent],
+    ['Balance due',document.getElementById('pt-due').textContent],
+    ['Payment notes',v('f-paynotes')]
+  ].filter(d=>d[1]&&d[1]!='$0.00');
+  document.getElementById('inv-pay-info').innerHTML=payInfo.map(d=>'<span class="k">'+d[0]+'</span><span class="v">'+d[1]+'</span>').join('');
+  const notes=[v('f-dietary'),v('f-notes')].filter(Boolean).join(' · ');
+  if(notes){
+    document.getElementById('inv-notes-section').style.display='block';
+    document.getElementById('inv-notes').textContent=notes;
+  }
+  document.getElementById('invoice-preview').style.display='block';
+}
+
+function closeInvoice(){document.getElementById('invoice-preview').style.display='none';}
+
+function printInvoice(){
+  closeInvoice();
+  setTimeout(()=>window.print(),200);
+}
+
+function sendWhatsApp(){
+  const rn=v('f-restname')||'Restaurant';
+  const client=v('f-client')||'Client';
+  const date=v('f-date');const time=v('f-time');const guests=v('f-guests');
+  const venue=v('f-venue');const phone=v('f-phone');
+  const total=document.getElementById('grand-total').textContent;
+  const paid=document.getElementById('pt-paid').textContent;
+  const due=document.getElementById('pt-due').textContent;
+  let items='';
+  document.querySelectorAll('#items-body tr').forEach(tr=>{
+    const name=tr.cells[0]?.querySelector('input')?.value;
+    const qty=tr.cells[1]?.querySelector('input')?.value;
+    const unit=tr.cells[2]?.querySelector('input')?.value;
+    if(name)items+='• '+name+(qty?' ('+qty+(unit?' '+unit:'')+')\n':'');
+  });
+  const notes=[v('f-dietary'),v('f-notes')].filter(Boolean).join('\n');
+  let msg='*'+rn+' — Catering Invoice*\n\n';
+  msg+='*Client:* '+client+'\n';
+  if(phone)msg+='*Phone:* '+phone+'\n';
+  if(date)msg+='*Date:* '+date+(time?' at '+time:'')+'\n';
+  if(guests)msg+='*Guests:* '+guests+'\n';
+  if(venue)msg+='*Venue:* '+venue+'\n\n';
+  if(items)msg+='*Items:*\n'+items+'\n';
+  msg+='*Total:* '+total+'\n';
+  if(paid&&paid!='$0.00')msg+='*Paid:* '+paid+'\n';
+  if(due&&due!='$0.00')msg+='*Balance due:* '+due+'\n';
+  if(v('f-depreq'))msg+='*Deposit:* '+v('f-depreq')+'\n';
+  if(notes)msg+='\n*Notes:* '+notes;
+  const url='https://wa.me/'+v('f-phone').replace(/\D/g,'')+'?text='+encodeURIComponent(msg);
+  window.open(url,'_blank');
+}
+
+addRow();
+</script>
+</body>
+</html>
