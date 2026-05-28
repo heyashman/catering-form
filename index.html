@@ -463,8 +463,180 @@ function showInvoice(){
 function closeInvoice(){document.getElementById('invoice-preview').style.display='none';}
 
 function printInvoice(){
-  closeInvoice();
-  setTimeout(()=>window.print(),200);
+  const rn=v('f-restname')||'Restaurant';
+  const br=[v('f-branch'),v('f-manager')].filter(Boolean).join(' · ');
+  const client=v('f-client')||'—';
+  const phone=v('f-phone');
+  const email=v('f-email');
+  const company=v('f-company');
+  const ref=v('f-ref')||'—';
+  const date=v('f-date');
+  const time=v('f-time');
+  const guests=v('f-guests');
+  const event=v('f-event');
+  const venue=v('f-venue');
+  const setup=v('f-setup');
+  const venuecontact=v('f-venuecontact');
+  const depreq=v('f-depreq');
+  const depdue=v('f-depdue');
+  const paynotes=v('f-paynotes');
+  const dietary=v('f-dietary');
+  const notes=v('f-notes');
+  const booked=v('f-booked');
+  const bookedby=v('f-bookedby');
+  const taxStr=v('f-tax');
+  const subtotal=document.getElementById('subtotal').textContent;
+  const grand=document.getElementById('grand-total').textContent;
+  const paid=document.getElementById('pt-paid').textContent;
+  const due=document.getElementById('pt-due').textContent;
+
+  // Build items rows
+  let itemRows='';
+  document.querySelectorAll('#items-body tr').forEach(tr=>{
+    const name=tr.cells[0]?.querySelector('input')?.value||'';
+    const qty=tr.cells[1]?.querySelector('input')?.value||'';
+    const unit=tr.cells[2]?.querySelector('input')?.value||'';
+    const price=tr.cells[3]?.querySelector('input')?.value||'';
+    const sub=document.getElementById('rs-'+tr.id.replace('row-',''))?.textContent||'';
+    if(name) itemRows+=`<tr><td>${name}</td><td style="text-align:center">${qty}</td><td>${unit}</td><td style="text-align:right">${price}</td><td style="text-align:right;font-weight:600">${sub}</td></tr>`;
+  });
+
+  // Build payment rows
+  let payRows='';
+  document.querySelectorAll('#pay-body tr').forEach(tr=>{
+    const pdate=tr.cells[0]?.querySelector('input')?.value||'';
+    const pamt=tr.cells[1]?.querySelector('input')?.value||'';
+    const pmeth=tr.cells[2]?.querySelector('select')?.value||'';
+    const ptype=tr.cells[3]?.querySelector('select')?.value||'';
+    const pstat=tr.cells[4]?.querySelector('select')?.value||'';
+    if(pamt) payRows+=`<tr><td>${pdate}</td><td>${pmeth}</td><td>${ptype}</td><td style="text-align:right">${pamt}</td><td style="text-align:right;font-weight:600;color:${pstat==='Received'?'#16a34a':pstat==='Refunded'?'#dc2626':'#92400e'}">${pstat}</td></tr>`;
+  });
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8">
+<title>Invoice – ${rn}</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a1a;font-size:13px;padding:32px;max-width:680px;margin:0 auto}
+  .hd{border-bottom:2px solid #1a1a1a;padding-bottom:14px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:flex-start}
+  .hd-left h1{font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .hd-left p{font-size:12px;color:#888;margin-top:2px}
+  .hd-right{text-align:right}
+  .hd-right .inv-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#888;margin-bottom:3px}
+  .hd-right .inv-num{font-size:18px;font-weight:800;color:#1a1a1a}
+  .hd-right .inv-date{font-size:12px;color:#888;margin-top:2px}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;margin-bottom:16px}
+  .box{background:#f8f7f5;border-radius:8px;padding:12px 14px}
+  .box-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:8px}
+  .kv{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12px}
+  .kv .k{color:#888}
+  .kv .v{font-weight:500}
+  section{margin-bottom:16px}
+  section h2{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#888;margin-bottom:8px}
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#888;padding:5px 0;border-bottom:1px solid #ddd;text-align:left}
+  td{padding:6px 0;border-bottom:1px solid #f0ede8;vertical-align:top}
+  .totals{margin-top:10px;border-top:1px solid #e5e3dd;padding-top:6px}
+  .trow{display:flex;justify-content:space-between;font-size:12px;color:#888;padding:3px 0}
+  .trow.grand{border-top:2px solid #1a1a1a;margin-top:6px;padding-top:8px;font-size:16px;font-weight:800;color:#1a1a1a}
+  .pay-summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+  .pc{background:#f8f7f5;border-radius:7px;padding:9px 11px;text-align:center}
+  .pc .pcl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#888;margin-bottom:3px}
+  .pc .pcv{font-size:15px;font-weight:800}
+  .pc.total .pcv{color:#1a1a1a}
+  .pc.paid .pcv{color:#16a34a}
+  .pc.due .pcv{color:#dc2626}
+  .note-box{background:#fffbeb;border:1px solid #fcd34d;border-radius:7px;padding:10px 12px;font-size:12px;color:#555;line-height:1.5}
+  .footer{margin-top:22px;border-top:1px solid #e5e3dd;padding-top:10px;font-size:11px;color:#aaa;display:flex;justify-content:space-between}
+  @media print{body{padding:18px}@page{margin:14mm}}
+</style></head><body>
+
+<div class="hd">
+  <div class="hd-left">
+    <h1>${rn}</h1>
+    ${br?`<p>${br}</p>`:''}
+  </div>
+  <div class="hd-right">
+    <div class="inv-label">Invoice</div>
+    <div class="inv-num">${ref}</div>
+    ${date?`<div class="inv-date">${date}</div>`:''}
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="box">
+    <div class="box-title">Bill to</div>
+    <div class="kv">
+      ${client!='—'?`<span class="k">Name</span><span class="v" style="font-weight:700;font-size:13px">${client}</span>`:''}
+      ${phone?`<span class="k">Phone</span><span class="v">${phone}</span>`:''}
+      ${email?`<span class="k">Email</span><span class="v">${email}</span>`:''}
+      ${company?`<span class="k">Company</span><span class="v">${company}</span>`:''}
+    </div>
+  </div>
+  <div class="box">
+    <div class="box-title">Event details</div>
+    <div class="kv">
+      ${event?`<span class="k">Type</span><span class="v">${event}</span>`:''}
+      ${date?`<span class="k">Date</span><span class="v">${date}${time?' at '+time:''}</span>`:''}
+      ${guests?`<span class="k">Guests</span><span class="v">${guests}</span>`:''}
+      ${venue?`<span class="k">Venue</span><span class="v">${venue}</span>`:''}
+      ${setup?`<span class="k">Setup</span><span class="v">${setup}</span>`:''}
+      ${venuecontact?`<span class="k">Venue contact</span><span class="v">${venuecontact}</span>`:''}
+    </div>
+  </div>
+</div>
+
+${itemRows?`<section>
+  <h2>Items ordered</h2>
+  <table>
+    <thead><tr>
+      <th>Item</th><th style="text-align:center">Qty</th><th>Unit</th><th style="text-align:right">Price</th><th style="text-align:right">Subtotal</th>
+    </tr></thead>
+    <tbody>${itemRows}</tbody>
+  </table>
+  <div class="totals">
+    <div class="trow"><span>Subtotal</span><span>${subtotal}</span></div>
+    ${taxStr?`<div class="trow"><span>Tax / service</span><span>${taxStr}</span></div>`:''}
+    <div class="trow grand"><span>Total</span><span>${grand}</span></div>
+  </div>
+</section>`:''}
+
+<section>
+  <h2>Payment summary</h2>
+  <div class="pay-summary">
+    <div class="pc total"><div class="pcl">Grand total</div><div class="pcv">${grand}</div></div>
+    <div class="pc paid"><div class="pcl">Paid</div><div class="pcv">${paid}</div></div>
+    <div class="pc due"><div class="pcl">Balance due</div><div class="pcv">${due}</div></div>
+  </div>
+  ${payRows?`<table>
+    <thead><tr><th>Date</th><th>Method</th><th>Type</th><th style="text-align:right">Amount</th><th style="text-align:right">Status</th></tr></thead>
+    <tbody>${payRows}</tbody>
+  </table>`:''}
+  ${depreq||depdue||paynotes?`<div class="kv" style="margin-top:8px">
+    ${depreq?`<span class="k">Deposit required</span><span class="v">${depreq}</span>`:''}
+    ${depdue?`<span class="k">Deposit due</span><span class="v">${depdue}</span>`:''}
+    ${paynotes?`<span class="k">Payment notes</span><span class="v">${paynotes}</span>`:''}
+  </div>`:''}
+</section>
+
+${dietary||notes?`<section>
+  <h2>Notes</h2>
+  <div class="note-box">
+    ${dietary?`<strong>Dietary / allergies:</strong> ${dietary}<br>`:''}
+    ${notes?notes:''}
+  </div>
+</section>`:''}
+
+<div class="footer">
+  <span>${rn}${br?' · '+br:''}</span>
+  <span>${booked?'Booked '+booked:''}${bookedby?' by '+bookedby:''}</span>
+</div>
+
+<script>window.onload=function(){window.print();}<\/script>
+</body></html>`;
+
+  const w=window.open('','_blank','width=750,height=950');
+  w.document.write(html);
+  w.document.close();
 }
 
 function sendWhatsApp(){
